@@ -44,8 +44,8 @@ findNElem 3 (lift' [1,2,3])
 But this has a limitation of extra parantheses and passing of list [1,2,3] to lift'. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.
 
 {% highlight haskell %}
-let fcompl = findNElem 3 . lift'
-:t fcompl
+ λ> let fcompl = findNElem 3 . lift'
+ λ> :t fcompl
 fcompl :: [Integer] -> Bool
 {% endhighlight %}
 
@@ -54,7 +54,7 @@ Going from the above definition: (b -> c) -> (a -> b) -> (a -> c)
 The type of lift':
 
 {% highlight haskell %}
-:t lift'
+ λ> :t lift'
 lift' :: Num a => [a] -> [Maybe a]
 {% endhighlight %}
 
@@ -66,7 +66,7 @@ is equivalent to
 The type of findNElem:
 
 {% highlight haskell %}
-:t findNElem 3
+λ> :t findNElem 3
 findNElem 3 :: (Eq a, Num a) => [Maybe a] -> Bool
 {% endhighlight %}
 
@@ -86,22 +86,22 @@ So to finally arrive at this composed type we use (.) to compose functions.
 Here's the type of (.):
 
 {% highlight haskell %}
-: (.)
+λ> : (.)
 (.) :: (b -> c) -> (a -> b) -> a -> c
 {% endhighlight %}
 
 which is same as what was defined aboove.
 
 {% highlight haskell %}
-let fcompl = findNElem 3 . lift'
-:t fcompl
+λ> let fcompl = findNElem 3 . lift'
+λ> :t fcompl
 fcompl :: [Integer] -> Bool
 {% endhighlight %}
 
 Finally, we run it check if the element exists:
 
 {% highlight haskell %}
-fcompl [1,2,3]
+λ> fcompl [1,2,3]
 True
 {% endhighlight %}
 
