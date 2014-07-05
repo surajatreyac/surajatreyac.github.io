@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Paul Chiusano: Function composition</title>
+    <title>Suraj Atreya: Function composition</title>
 
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -60,29 +60,46 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 <p>But this has a limitation of extra parantheses and passing of list [1,2,3] to lift’. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.</p>
 
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
+<span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
+<span class="nf">fcompl</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Integer</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
+
+<p>Going from the abover definition: (b -&gt; c) -&gt; (a -&gt; b) -&gt; (a -&gt; c)</p>
+
 <p>The type of lift’:</p>
 
 <div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span><span class="n">t</span> <span class="n">lift&#39;</span>
 <span class="nf">lift&#39;</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span></code></pre></div>
 
+<p>Here:<br />
+(a  -&gt;  b) <br />
+is equivalent to<br />
+[a] -&gt; [Maybe a]</p>
+
 <p>The type of findNElem:</p>
-
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span><span class="n">t</span> <span class="n">findNElem</span>
-<span class="nf">findNElem</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Eq</span> <span class="n">a</span><span class="p">,</span> <span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
-
-<p>The type of (.):</p>
-
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span> <span class="p">(</span><span class="o">.</span><span class="p">)</span>
-<span class="p">(</span><span class="o">.</span><span class="p">)</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">c</span></code></pre></div>
-
-<p>From the above types we see lift’ has the type [a] -&gt; [Maybe a] which is equivalent to (a -&gt; b). a is in case would be [a] and b is [Maybe a]</p>
 
 <div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span><span class="n">t</span> <span class="n">findNElem</span> <span class="mi">3</span>
 <span class="nf">findNElem</span> <span class="mi">3</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Eq</span> <span class="n">a</span><span class="p">,</span> <span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
 
-<p>findNElem 3 has the type [Maybe a] -&gt; Bool. Hence findElem 3 can be composed with lift’ because findElem 3 takes [Maybe a] which is the output from lift’</p>
+<p>Here:<br />
+(b -&gt; c)<br />
+is equivalent to<br />
+[Maybe a] -&gt; Bool</p>
 
-<p>Here is the composition:</p>
+<p>So the final type should look like:<br />
+(a -&gt; c)<br />
+[a] -&gt; Bool<br />
+which in our case is<br />
+[Integer] -&gt; Bool</p>
+
+<p>So to finally arrive at this composed type we use (.) to compose functions.</p>
+
+<p>Here’s the type of (.):</p>
+
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span> <span class="p">(</span><span class="o">.</span><span class="p">)</span>
+<span class="p">(</span><span class="o">.</span><span class="p">)</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">c</span></code></pre></div>
+
+<p>which is same as what was defined aboove.</p>
 
 <div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
 <span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
@@ -121,7 +138,7 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 <div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">fcompl</span><span class="o">(</span><span class="nc">List</span><span class="o">[</span><span class="err">1</span>,<span class="err">2</span>,<span class="err">3</span><span class="o">])</span></code></pre></div>
 
-<p>###Conclusion###</p>
+<h4>Conclusion</h4>
 
 <p>Function composition can become overwhelming if we compose too many functions. But, for some cases which needs reusability, this is a great tool. Haskell supports currying by default and hence the code looks pretty and succinct compared to Scala counterpart.</p>
 

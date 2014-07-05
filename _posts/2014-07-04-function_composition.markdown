@@ -43,6 +43,14 @@ findNElem 3 (lift' [1,2,3])
 
 But this has a limitation of extra parantheses and passing of list [1,2,3] to lift'. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.
 
+{% highlight haskell %}
+let fcompl = findNElem 3 . lift'
+:t fcompl
+fcompl :: [Integer] -> Bool
+{% endhighlight %}
+
+Going from the abover definition: (b -> c) -> (a -> b) -> (a -> c)
+
 The type of lift':
 
 {% highlight haskell %}
@@ -50,31 +58,39 @@ The type of lift':
 lift' :: Num a => [a] -> [Maybe a]
 {% endhighlight %}
 
+Here:
+(a  ->  b) 
+is equivalent to
+[a] -> [Maybe a]
+
 The type of findNElem:
-
-{% highlight haskell %}
-:t findNElem
-findNElem :: (Eq a, Num a) => a -> [Maybe a] -> Bool
-{% endhighlight %}
-
-The type of (.):
-
-{% highlight haskell %}
-: (.)
-(.) :: (b -> c) -> (a -> b) -> a -> c
-{% endhighlight %}
-
-
-From the above types we see lift' has the type [a] -> [Maybe a] which is equivalent to (a -> b). a is in case would be [a] and b is [Maybe a]
 
 {% highlight haskell %}
 :t findNElem 3
 findNElem 3 :: (Eq a, Num a) => [Maybe a] -> Bool
 {% endhighlight %}
 
-findNElem 3 has the type [Maybe a] -> Bool. Hence findElem 3 can be composed with lift' because findElem 3 takes [Maybe a] which is the output from lift'
+Here:
+(b -> c)
+is equivalent to
+[Maybe a] -> Bool
 
-Here is the composition:
+So the final type should look like:
+(a -> c)
+[a] -> Bool
+which in our case is
+[Integer] -> Bool
+
+So to finally arrive at this composed type we use (.) to compose functions.
+
+Here's the type of (.):
+
+{% highlight haskell %}
+: (.)
+(.) :: (b -> c) -> (a -> b) -> a -> c
+{% endhighlight %}
+
+which is same as what was defined aboove.
 
 {% highlight haskell %}
 let fcompl = findNElem 3 . lift'
@@ -131,6 +147,6 @@ List[Option[Int]] => Boolean
 fcompl(List[1,2,3])
 {% endhighlight %}
 
-###Conclusion###
+<h4>Conclusion</h4>
 
 Function composition can become overwhelming if we compose too many functions. But, for some cases which needs reusability, this is a great tool. Haskell supports currying by default and hence the code looks pretty and succinct compared to Scala counterpart.
