@@ -60,15 +60,15 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 <p>But this has a limitation of extra parantheses and passing of list [1,2,3] to lift’. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
-<span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
+<span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
 <span class="nf">fcompl</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Integer</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
 
-<p>Going from the abover definition: (b -&gt; c) -&gt; (a -&gt; b) -&gt; (a -&gt; c)</p>
+<p>Going from the above definition: (b -&gt; c) -&gt; (a -&gt; b) -&gt; (a -&gt; c)</p>
 
 <p>The type of lift’:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span><span class="n">t</span> <span class="n">lift&#39;</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">lift&#39;</span>
 <span class="nf">lift&#39;</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span></code></pre></div>
 
 <p>Here:<br />
@@ -78,7 +78,7 @@ is equivalent to<br />
 
 <p>The type of findNElem:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span><span class="n">t</span> <span class="n">findNElem</span> <span class="mi">3</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">findNElem</span> <span class="mi">3</span>
 <span class="nf">findNElem</span> <span class="mi">3</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Eq</span> <span class="n">a</span><span class="p">,</span> <span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
 
 <p>Here:<br />
@@ -96,18 +96,18 @@ which in our case is<br />
 
 <p>Here’s the type of (.):</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kt">:</span> <span class="p">(</span><span class="o">.</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span> <span class="p">(</span><span class="o">.</span><span class="p">)</span>
 <span class="p">(</span><span class="o">.</span><span class="p">)</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">c</span></code></pre></div>
 
 <p>which is same as what was defined aboove.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
-<span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
+<span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
 <span class="nf">fcompl</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Integer</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
 
 <p>Finally, we run it check if the element exists:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">fcompl</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="n">fcompl</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
 <span class="kt">True</span></code></pre></div>
 
 <p>Here’s the same example but in Scala:</p>

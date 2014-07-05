@@ -44,8 +44,8 @@ findNElem 3 (lift' [1,2,3])
 But this has a limitation of extra parantheses and passing of list [1,2,3] to lift'. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.
 
 {% highlight haskell %}
- λ> let fcompl = findNElem 3 . lift'
- λ> :t fcompl
+λ> let fcompl = findNElem 3 . lift'
+λ> :t fcompl
 fcompl :: [Integer] -> Bool
 {% endhighlight %}
 
@@ -54,7 +54,7 @@ Going from the above definition: (b -> c) -> (a -> b) -> (a -> c)
 The type of lift':
 
 {% highlight haskell %}
- λ> :t lift'
+λ> :t lift'
 lift' :: Num a => [a] -> [Maybe a]
 {% endhighlight %}
 
