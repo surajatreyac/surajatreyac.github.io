@@ -49,7 +49,7 @@ let fcompl = findNElem 3 . lift'
 fcompl :: [Integer] -> Bool
 {% endhighlight %}
 
-Going from the abover definition: (b -> c) -> (a -> b) -> (a -> c)
+Going from the above definition: (b -> c) -> (a -> b) -> (a -> c)
 
 The type of lift':
 
