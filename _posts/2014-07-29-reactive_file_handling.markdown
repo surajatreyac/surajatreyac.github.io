@@ -19,15 +19,15 @@ Just when things were going right...
 
 <h4>WatchService API's MODIFY event</h4>
 
-For a lot of practical purposes, WatchService's MODIFY event [3] is sufficient for getting a file event. But just getting a file event isn't enough. The file event should trigger when the file has been completely copied to the watched path. Otherwise, the file may be sent to parsing whilst the file is being copied from the customer end. This is not acceptable and will lead to race conditions. This scenario is especially valid when the files are sent via FTP/SFTP/SCP. When the file is sent via FTP/SFTP/SCP, the files are copied in chunks and WatchService API will treat each chunk as a file and hence trigger as many MODIFY events as the number of chunks. This is the drawback of WatchService API as it cannot let the client code know when the file got completely copied.
+For a lot of practical purposes, WatchService's MODIFY event is sufficient for getting a file event. But just getting a file event isn't enough. The file event should trigger when the file has been completely copied to the watched path. Otherwise, the file may be sent to parsing whilst the file is being copied from the customer end. This is not acceptable and will lead to race conditions. This scenario is especially valid when the files are sent via FTP/SFTP/SCP. When the file is sent via FTP/SFTP/SCP, the files are copied in chunks and WatchService API will treat each chunk as a file and hence trigger as many MODIFY events as the number of chunks. This is the drawback of WatchService API as it cannot let the client code know when the file got completely copied.
 
 The reason that was citied in some of the forums for this seeming limitation is that Oracle JDK aims to achieve portability by letting go some of the platform specific dependency. Thus events such CLOSE_WRITE which clearly marks the end of file even though the underlying protocol used may be FTP/SFTP/SCP. Since CLOSE_WRITE event was a vital event, we decided to let go of JDK WatchService API altogether. Instead, we adapted an open source project aimed specifically to address this problem and exposes all the native inotify's events including CLOSE_WRITE.
 
-We have open sourced this "Watcher" module <a>https://github.com/glassbeam/watcher</a> under GPL v3 license.
+We have open sourced this "Watcher" module <a href="https://github.com/glassbeam/watcher">https://github.com/glassbeam/watcher</a> under GPL v3 license.
 
 <h4>Conclusion</h4>
 
 Although, APIs such as WatchService are designed to be portable, it doesn't serve for a lot of scenarios. The API must have had options to enable some of the inotify events thereby using the same API. Akka helped to scale and react to events asynchronously and therefore we gained a huge profit by not spinning threads ourselves.
-[1]: <a>http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html</a>
-[2]: <a>http://man7.org/linux/man-pages/man7/inotify.7.html</a>
-[3]: <a>http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardWatchEventKinds.html#ENTRY_MODIFY</a>
+[1]: <a href="http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html">http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html</a>
+[2]: <a href="http://man7.org/linux/man-pages/man7/inotify.7.html">http://man7.org/linux/man-pages/man7/inotify.7.html</a>
+[3]: <a href="http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardWatchEventKinds.html#ENTRY_MODIFY">http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardWatchEventKinds.html#ENTRY_MODIFY</a>
