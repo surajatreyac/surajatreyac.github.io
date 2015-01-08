@@ -1,0 +1,131 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Suraj Atreya: Data Analysis using pandas</title>
+
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+    <link rel="stylesheet" href="/highlightstyles/github.css">
+    <script src="/javascripts/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      
+      <header>
+        <link rel="alternate" type="application/rss+xml" title="Suraj Atreya" href="http://surajatreyac.github.io/feed.xml">
+        <h1 class="view"><a href="/">Suraj Atreya</a></h1>
+        <p>Functional programming, Scala, Haskell, Distributed Systems</p>
+        <p>
+          <a href="https://twitter.com/suraja3ya">Twitter</a> •
+          <a href="https://github.com/surajatreyac">GitHub</a> • 
+          <a href="/feed.xml">RSS</a>
+        </p>
+      </header>
+
+      <section>
+      <h1>Data Analysis using pandas</h1>
+      <p>I’ve been meaning to learn pandas for a while ever since I started looking into data analysis tools. Although I don’t have extensive experience in data analysis, I’ve been writing Scala for quite sometime. Although I love Scala and its awesome libraries, it just falls short of doing quick data analysis especially exploratory data analysis (EDA). I was fishing for a good tool to do EDA and almost all the blog posts and all the community around data science suggested R as the primary tool to do EDA. But, I decided to learn pandas anyway since I have already done Python before. I have nothing against R and I will probably learn it sometime. I have checked out RStudio and it amazed me when the first time I used. But R will have to wait.</p>
+
+<p>One of the advantages of pandas is that it leverages Python the language which is pretty easy to learn. Libraries such as NumPy, SciPy, matplotlib make data analysis much more powerful by visualising complex data. NumPy, SciPy have a fast matrix operations which makes it really good for analysing larger data sets with short time. Pandas leverages the power of these libraries to provide data munging, transforming and cleaning capabilities.</p>
+
+<p>Now for an example. Let’s say we wanted to use Yahoo finance’s derivatives data for analysis (<a href="http://finance.yahoo.com/q/op?s=TSLA+Options">Tesla</a>). But since it is in a webpage, we want to first scrape the data and make it useful for our analysis. </p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">from lxml.html import parse
+from urllib2 import urlopen
+scraped = parse(urlopen(
+	'http://finance.yahoo.com/q/op?s=TSLA+Options'))</code></pre></div>
+
+<p>Once we have the data, we want to get the “calls” and “puts” table. For this we will get all the tables and by trial and error figure out the tables we need.</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">doc = scraped.getroot()
+tables = doc.findall('.//table')
+calls = tables[1]
+puts = tables[2]</code></pre></div>
+
+<p>But this data is not useful right away unless there is a way to extract the table header and table data. This step is crucial since the data is not clean and has to be cleaned before applying any machine learning algorithms or statistical models for further analysis. I have defined two helper functions “unpack” and “clean_data”. “unpack” will unpack the values and finds the string for each of the table headers or table data and returns a string. “clean_data” as the name suggests cleans any non-ascii characters and returns a parsable string.</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">def unpack(row, kind='td'):
+    elts = row.findall('.//%s' % kind)
+    return [val.text_content() for val in elts]
+
+def clean_data(str):
+    return re.sub('[\n\s*]|[^\x00-\x7F]+','',str)</code></pre></div>
+
+<p>To get the row header and data:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">rows = calls.findall('.//tr')
+
+rowheader_unclean = _unpack(calls, kind='th')
+
+rowheader = []
+for row in rowheader_unclean:
+    rowheader.append(_clean_data(row))
+
+data_unclean = _unpack(rows[2], kind='td')
+
+data = []
+for d in data_unclean:
+    data.append(_clean_data(d))</code></pre></div>
+
+<p>Putting it all together:</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">from pandas.io.parsers import TextParser
+
+def parse_options_data(table):
+    rowheader = []
+    data = []
+    
+    rows = table.findall('.//tr')
+    rowheader_unclean = unpack(table, kind='th')
+    
+    for row in rowheader_unclean:
+        rowheader.append(clean_data(row))
+        
+    data_unclean = [unpack(r) for r in rows[2:]]
+
+    for data_vals in data_unclean:
+        cleaned_data = [clean_data(d) for d in data_vals]
+        data.append(cleaned_data)
+        
+    return TextParser(data, names=rowheader).get_chunk()</code></pre></div>
+
+<p>Above we have found out which tables are calls and puts. We will just provide these tables to our newly defined function “parse_options_data”.</p>
+
+<div class="highlight"><pre><code class="language-python" data-lang="python">call_data = parse_options_data(calls)</code></pre></div>
+
+<p>call_data should look something like as shown below:</p>
+
+<p><img src="/assets/pandas_output.png" alt="Pandas output" /></p>
+
+<h4>Conclusion</h4>
+
+<p>I found pandas to be very flexible in terms of fetching urls and parsing them with no effort. If the data were instead in a database such as MySql or someother DB, then there are many connectors available. One could connect several databases from python to analyse data from multiple sources. But for someone who is starting out pandas would be much simpler than R. Also, I haven’t shown any plotting mechanisms which I am saving it for another time. That should be more fun and hope to cover those for another day.</p>
+
+<p>And, happy new year 2015 and happy hacking!</p>
+
+      <div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'surajatreyac'; // required: replace example with your forum shortname
+    var disqus_title = 'Data Analysis using pandas';
+    var disqus_url = 'http://surajatreyac.github.io/2015-01-07/pandas.html';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+      </section>
+    </div>
+  </body>
+</html>
