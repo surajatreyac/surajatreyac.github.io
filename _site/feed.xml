@@ -7,6 +7,133 @@
 		<atom:link href="http://surajatreyac.github.io/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Data Analysis using pandas</title>
+				<description>&lt;p&gt;I’ve been meaning to learn pandas for a while ever since I started looking into data analysis tools. Although I don’t have extensive experience in data analysis, I’ve been writing Scala for quite sometime. Although I love Scala and its awesome libraries, it just falls short of doing quick data analysis especially exploratory data analysis (EDA). I was fishing for a good tool to do EDA and almost all the blog posts and all the community around data science suggested R as the primary tool to do EDA. But, I decided to learn pandas anyway since I have already done Python before. I have nothing against R and I will probably learn it sometime. I have checked out RStudio and it amazed me when the first time I used. But R will have to wait.&lt;/p&gt;
+
+&lt;p&gt;One of the advantages of pandas is that it leverages Python the language which is pretty easy to learn. Libraries such as NumPy, SciPy, matplotlib make data analysis much more powerful by visualising complex data. NumPy, SciPy have a fast matrix operations which makes it really good for analysing larger data sets with short time. Pandas leverages the power of these libraries to provide data munging, transforming and cleaning capabilities.&lt;/p&gt;
+
+&lt;p&gt;Now for an example. Let’s say we wanted to use Yahoo finance’s derivatives data for analysis (&lt;a href=&quot;http://finance.yahoo.com/q/op?s=TSLA+Options&quot;&gt;Tesla&lt;/a&gt;). But since it is in a webpage, we want to first scrape the data and make it useful for our analysis. &lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;from lxml.html import parse
+from urllib2 import urlopen
+scraped = parse(urlopen(
+	'http://finance.yahoo.com/q/op?s=TSLA+Options'))&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Once we have the data, we want to get the “calls” and “puts” table. For this we will get all the tables and by trial and error figure out the tables we need.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;doc = scraped.getroot()
+tables = doc.findall('.//table')
+calls = tables[1]
+puts = tables[2]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;But this data is not useful right away unless there is a way to extract the table header and table data. This step is crucial since the data is not clean and has to be cleaned before applying any machine learning algorithms or statistical models for further analysis. I have defined two helper functions “unpack” and “clean_data”. “unpack” will unpack the values and finds the string for each of the table headers or table data and returns a string. “clean_data” as the name suggests cleans any non-ascii characters and returns a parsable string.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;def unpack(row, kind='td'):
+    elts = row.findall('.//%s' % kind)
+    return [val.text_content() for val in elts]
+
+def clean_data(str):
+    return re.sub('[\n\s*]|[^\x00-\x7F]+','',str)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;To get the row header and data:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;rows = calls.findall('.//tr')
+
+rowheader_unclean = _unpack(calls, kind='th')
+
+rowheader = []
+for row in rowheader_unclean:
+    rowheader.append(_clean_data(row))
+
+data_unclean = _unpack(rows[2], kind='td')
+
+data = []
+for d in data_unclean:
+    data.append(_clean_data(d))&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Putting it all together:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;from pandas.io.parsers import TextParser
+
+def parse_options_data(table):
+    rowheader = []
+    data = []
+    
+    rows = table.findall('.//tr')
+    rowheader_unclean = unpack(table, kind='th')
+    
+    for row in rowheader_unclean:
+        rowheader.append(clean_data(row))
+        
+    data_unclean = [unpack(r) for r in rows[2:]]
+
+    for data_vals in data_unclean:
+        cleaned_data = [clean_data(d) for d in data_vals]
+        data.append(cleaned_data)
+        
+    return TextParser(data, names=rowheader).get_chunk()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Above we have found out which tables are calls and puts. We will just provide these tables to our newly defined function “parse_options_data”.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;call_data = parse_options_data(calls)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;call_data should look something like as shown below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/pandas_output.png&quot; alt=&quot;Pandas output&quot; /&gt;&lt;/p&gt;
+
+&lt;h4&gt;Conclusion&lt;/h4&gt;
+
+&lt;p&gt;I found pandas to be very flexible in terms of fetching urls and parsing them with no effort. If the data were instead in a database such as MySql or someother DB, then there are many connectors available. One could connect several databases from python to analyse data from multiple sources. But for someone who is starting out pandas would be much simpler than R. Also, I haven’t shown any plotting mechanisms which I am saving it for another time. That should be more fun and hope to cover those for another day.&lt;/p&gt;
+
+&lt;p&gt;And, happy new year 2015 and happy hacking!&lt;/p&gt;
+</description>
+				<pubDate>Wed, 07 Jan 2015 11:27:00 +0530</pubDate>
+				<link>http://surajatreyac.github.io/2015-01-07/pandas.html</link>
+				<guid isPermaLink="true">http://surajatreyac.github.io/2015-01-07/pandas.html</guid>
+			</item>
+		
+			<item>
+				<title>Reactive file handling using Akka and inotify</title>
+				<description>&lt;p&gt;At Glassbeam, everyday we deal with terabytes of data. As part of SCALAR platform, we have to ingest many files and parse them at real time. The files arrive asynchronously and fast. These files are then picked up for parsing in the order in which they are arriving. For such a demanding requirement, we had to design a system which should not only be concurrent and asynchronous but also scalable. &lt;/p&gt;
+
+&lt;p&gt;Our customers can send files either through FTP/SFTP/SCP, upload files through UI and so on. We needed a system which could trigger events as and when files arrive. The file arrival event is then trapped to make some entries in our database for book keeping purposes and further passed on to parsing engine. Our choice was Akka which scales well for this scenario and since we are a predominantly a Scala shop, Akka fits well into the ecosystem. We developed a module and internally we call it “Watcher” using Akka and Linux inotify. There were several challenges implementing such a system although it looks very simple on a first glance. In the next few sections, some of the pitfalls we faced are discussed.&lt;/p&gt;
+
+&lt;h4&gt;Oracle JDK7 WatchService API&lt;/h4&gt;
+
+&lt;p&gt;The first natural choice to trap file events was to use JDK7 WatchService API [1]. WatchService works by registering a file path on which we expect files to arrive. Once the files start appearing on this path, the API will notify for the client code to take action. Internally, this API uses  Linux inotify library [2] which is the notification system at the filesystem level and is specific to the platform in question. This wasn’t apparent on a first glance. In the dev environement everything was working as expected, however on AWS, the notification wasn’t triggering no matter what.&lt;/p&gt;
+
+&lt;p&gt;Interestingly, on a closer look it became clear that the Amazon AMI image we were using wasn’t supporting inotify by default. We tried a lot of different AMIs and finally fixated on CentOS image which has inotify.&lt;/p&gt;
+
+&lt;p&gt;Just when things were going right…&lt;/p&gt;
+
+&lt;h4&gt;WatchService API's MODIFY event&lt;/h4&gt;
+
+&lt;p&gt;For a lot of practical purposes, WatchService’s ENTRY_MODIFY event [3] is sufficient for getting a file event. But just getting a file event isn’t enough. The file event should trigger when the file has been completely copied to the watched path. Otherwise, the file may be sent to parsing whilst the file is being copied from the customer end. This is not acceptable and will lead to race conditions. This scenario is especially valid when the files are sent via FTP/SFTP/SCP. When the file is sent via FTP/SFTP/SCP, the files are copied in chunks and WatchService API will treat each chunk as a file and hence trigger as many ENTRY_MODIFY events as the number of chunks. This is the drawback of WatchService API as it cannot let the client code know when the file got completely copied.&lt;/p&gt;
+
+&lt;p&gt;The reason that was citied in some of the forums for this seeming limitation is that Oracle JDK aims to achieve portability by letting go some of the platform specific dependency. Thus events such as CLOSE_WRITE which clearly marks the end of file even though the underlying protocol used may be FTP/SFTP/SCP are not supported. Since CLOSE_WRITE event was a vital event, we decided to let go of JDK WatchService API altogether. Instead, we adapted an open source project aimed specifically to address this problem and exposes all the native inotify’s events including CLOSE_WRITE.&lt;/p&gt;
+
+&lt;p&gt;We have open sourced this “Watcher” module &lt;a href=&quot;https://github.com/glassbeam/watcher&quot;&gt;https://github.com/glassbeam/watcher&lt;/a&gt; under GPL v3 license.&lt;/p&gt;
+
+&lt;h4&gt;Conclusion&lt;/h4&gt;
+
+&lt;p&gt;Although, APIs such as WatchService are designed to be portable, it doesn’t serve for a lot of scenarios. The API must have had options to enable some of the inotify events thereby using the same API at the discretion of the user. Akka helped to scale and react to events asynchronously and therefore we gained a huge profit by not spinning threads ourselves.&lt;/p&gt;
+
+&lt;p&gt;
+[1]: &lt;a href=&quot;http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html&quot;&gt;http://docs.oracle.com/javase/7/docs/api/java/nio/file/WatchService.html&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;
+[2]: &lt;a href=&quot;http://man7.org/linux/man-pages/man7/inotify.7.html&quot;&gt;http://man7.org/linux/man-pages/man7/inotify.7.html&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;
+[3]: &lt;a href=&quot;http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardWatchEventKinds.html#ENTRY_MODIFY&quot;&gt;http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardWatchEventKinds.html#ENTRY_MODIFY&lt;/a&gt;
+&lt;/p&gt;
+</description>
+				<pubDate>Tue, 29 Jul 2014 08:30:00 +0530</pubDate>
+				<link>http://surajatreyac.github.io/2014-07-29/reactive_file_handling.html</link>
+				<guid isPermaLink="true">http://surajatreyac.github.io/2014-07-29/reactive_file_handling.html</guid>
+			</item>
+		
+			<item>
 				<title>Function composition</title>
 				<description>&lt;p&gt;Function composition is a great tool when you want to combine many functions to output a new function. This new function will take a parameter to output the result. Function composition takes the form (b -&amp;gt; c) -&amp;gt; (a -&amp;gt; b) -&amp;gt; a -&amp;gt; c. In other words this takes 2 functions; one function with (a -&amp;gt; b) and another with (b -&amp;gt; c). A quick observation will reveal that the output of second function which is b is the parameter to the first function. If this matches then we can compose two functions.&lt;/p&gt;
 
@@ -15,22 +142,22 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 &lt;p&gt;The lift’ function will take a number and transforms to Maybe.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;lift&amp;#39;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Num&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Maybe&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;lift&amp;#39;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Just&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;lift' :: (Num a) =&amp;gt; [a] -&amp;gt; [Maybe a]
+lift' = map (\f -&amp;gt; Just f)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The fromJust function is a helper function to transform from Maybe a to a. The code is pretty straight forward.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;fromJust&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Num&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Maybe&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;fromJust&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Just&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;fromJust :: (Num a) =&amp;gt; Maybe a -&amp;gt; a
+fromJust (Just x) = x&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This function will take a number and checks whether that number is present in the list.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Num&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Eq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Maybe&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Bool&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;False&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;xs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fromJust&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;then&lt;/span&gt;
-                        &lt;span class=&quot;kt&quot;&gt;True&lt;/span&gt;
-                     &lt;span class=&quot;kr&quot;&gt;else&lt;/span&gt; 
-                        &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xs&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;findNElem :: (Num a , Eq a) =&amp;gt; a -&amp;gt; [Maybe a] -&amp;gt; Bool
+findNElem a [] = False
+findNElem a (x:xs) = if a == fromJust x then
+                        True
+                     else 
+                        findNElem a xs&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;If we take a look without using function composition it looks something like this:&lt;/p&gt;
 
@@ -38,16 +165,16 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 &lt;p&gt;But this has a limitation of extra parantheses and passing of list [1,2,3] to lift’. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lift&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Bool&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; let fcompl = findNElem 3 . lift'
+λ&amp;gt; :t fcompl
+fcompl :: [Integer] -&amp;gt; Bool&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Going from the above definition: (b -&amp;gt; c) -&amp;gt; (a -&amp;gt; b) -&amp;gt; (a -&amp;gt; c)&lt;/p&gt;
 
 &lt;p&gt;The type of lift’:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lift&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;lift&amp;#39;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Num&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Maybe&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; :t lift'
+lift' :: Num a =&amp;gt; [a] -&amp;gt; [Maybe a]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Here:&lt;br /&gt;
 (a  -&amp;gt;  b) &lt;br /&gt;
@@ -56,8 +183,8 @@ is equivalent to&lt;br /&gt;
 
 &lt;p&gt;The type of findNElem:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Eq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Num&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Maybe&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Bool&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; :t findNElem 3
+findNElem 3 :: (Eq a, Num a) =&amp;gt; [Maybe a] -&amp;gt; Bool&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Here:&lt;br /&gt;
 (b -&amp;gt; c)&lt;br /&gt;
@@ -74,47 +201,47 @@ which in our case is&lt;br /&gt;
 
 &lt;p&gt;Here’s the type of (.):&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; : (.)
+(.) :: (b -&amp;gt; c) -&amp;gt; (a -&amp;gt; b) -&amp;gt; a -&amp;gt; c&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;which is same as what was defined aboove.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lift&amp;#39;&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt;
-&lt;span class=&quot;nf&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Integer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Bool&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; let fcompl = findNElem 3 . lift'
+λ&amp;gt; :t fcompl
+fcompl :: [Integer] -&amp;gt; Bool&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Finally, we run it check if the element exists:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;λ&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;True&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;λ&amp;gt; fcompl [1,2,3]
+True&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Here’s the same example but in Scala:&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lift&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;def lift(ls: List[Int]) = ls map { x =&amp;gt; Option(x)}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;:type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;lift&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;scala&amp;gt; :type lift _
+List[Int] =&amp;gt; List[Option[Int]]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elem&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ls&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]])&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Boolean&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;match&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Nil&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;
-	&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xs&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elem&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;xs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;def findNElem(elem: Int, ls: List[Option[Int]]): Boolean = ls match {
+    case Nil =&amp;gt; false
+	case x :: xs =&amp;gt; if (elem == x.get) true else findNElem (elem, xs)
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The point worth mentioning here is that we curry the function in Scala because Scala doesn’t provide currying by default. &lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findElemCurried&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;funcompose&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;curried&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;val findElemCurried = (funcompose.findNElem _).curried&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;If we look at the type we see it returns a Function1 which takes a function which takes a Int parameter and a function.&lt;/p&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findElemCurried&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;funcompose&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;findNElem&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;curried&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;findElemCurried&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Boolean&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;function1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;scala&amp;gt; val findElemCurried = (funcompose.findNElem _).curried
+findElemCurried: Int =&amp;gt; (List[Option[Int]] =&amp;gt; Boolean) = &amp;lt;function1&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;findElemCurried&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compose&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;funcompose&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lift&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;_&lt;/span&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;val fcompl = findElemCurried(3) compose funcompose.lift _
 
-&lt;span class=&quot;n&quot;&gt;scala&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;:type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;findElemCurried&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;kt&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Boolean&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+scala&amp;gt; :type findElemCurried(3)
+List[Option[Int]] =&amp;gt; Boolean&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;&lt;span class=&quot;n&quot;&gt;fcompl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;err&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;err&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-scala&quot; data-lang=&quot;scala&quot;&gt;fcompl(List[1,2,3])&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h4&gt;Conclusion&lt;/h4&gt;
 
