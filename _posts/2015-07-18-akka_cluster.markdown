@@ -80,7 +80,7 @@ def welcome(joinWith: Address, from: UniqueAddress, gossip: Gossip): Unit = {
 }
 {% endhighlight %}
 
-Unless the cluster comes converges to the same state seen by all nodes, Gossip convergence cannot happen until the node is made manually down or auto down by the Leader.
+Unless the cluster converges to the same state seen by all nodes, Gossip convergence cannot happen until the node is made manually down or auto down by the Leader.
 
 As far as the failure detection is concerned, heartbeats are sent to a few other nodes and then in turn respond back with another heartbeat.
 
