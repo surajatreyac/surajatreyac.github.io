@@ -33,26 +33,26 @@
       <p>Function composition is a great tool when you want to combine many functions to output a new function. This new function will take a parameter to output the result. Function composition takes the form (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c. In other words this takes 2 functions; one function with (a -&gt; b) and another with (b -&gt; c). A quick observation will reveal that the output of second function which is b is the parameter to the first function. If this matches then we can compose two functions.</p>
 
 <p>Here’s a contrived example in Haskell:<br />
-The code below checks whether an element is present in a list of numbers. To make the example interesting, we will lift the numbers in a list to Maybe and then pass this list containing [Maybe a] to findNElem. </p>
+The code below checks whether an element is present in a list of numbers. To make the example interesting, we will lift the numbers in a list to Maybe and then pass this list containing [Maybe a] to findNElem.</p>
 
 <p>The lift’ function will take a number and transforms to Maybe.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">lift&#39;</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span>
-<span class="nf">lift&#39;</span> <span class="ow">=</span> <span class="n">map</span> <span class="p">(</span><span class="nf">\</span><span class="n">f</span> <span class="ow">-&gt;</span> <span class="kt">Just</span> <span class="n">f</span><span class="p">)</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">lift' :: (Num a) =&gt; [a] -&gt; [Maybe a]
+lift' = map (\f -&gt; Just f)</code></pre></div>
 
 <p>The fromJust function is a helper function to transform from Maybe a to a. The code is pretty straight forward.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">fromJust</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="kt">Maybe</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">a</span>
-<span class="nf">fromJust</span> <span class="p">(</span><span class="kt">Just</span> <span class="n">x</span><span class="p">)</span> <span class="ow">=</span> <span class="n">x</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">fromJust :: (Num a) =&gt; Maybe a -&gt; a
+fromJust (Just x) = x</code></pre></div>
 
 <p>This function will take a number and checks whether that number is present in the list.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">findNElem</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Num</span> <span class="n">a</span> <span class="p">,</span> <span class="kt">Eq</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span>
-<span class="nf">findNElem</span> <span class="n">a</span> <span class="kt">[]</span> <span class="ow">=</span> <span class="kt">False</span>
-<span class="nf">findNElem</span> <span class="n">a</span> <span class="p">(</span><span class="n">x</span><span class="kt">:</span><span class="n">xs</span><span class="p">)</span> <span class="ow">=</span> <span class="kr">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">fromJust</span> <span class="n">x</span> <span class="kr">then</span>
-                        <span class="kt">True</span>
-                     <span class="kr">else</span> 
-                        <span class="n">findNElem</span> <span class="n">a</span> <span class="n">xs</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">findNElem :: (Num a , Eq a) =&gt; a -&gt; [Maybe a] -&gt; Bool
+findNElem a [] = False
+findNElem a (x:xs) = if a == fromJust x then
+                        True
+                     else 
+                        findNElem a xs</code></pre></div>
 
 <p>If we take a look without using function composition it looks something like this:</p>
 
@@ -60,16 +60,16 @@ The code below checks whether an element is present in a list of numbers. To mak
 
 <p>But this has a limitation of extra parantheses and passing of list [1,2,3] to lift’. Instead if the list is not yet known and all we wanted to check if 3 is present in a list which will be known in future then we can do something like below.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
-<span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
-<span class="nf">fcompl</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Integer</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; let fcompl = findNElem 3 . lift'
+λ&gt; :t fcompl
+fcompl :: [Integer] -&gt; Bool</code></pre></div>
 
 <p>Going from the above definition: (b -&gt; c) -&gt; (a -&gt; b) -&gt; (a -&gt; c)</p>
 
 <p>The type of lift’:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">lift&#39;</span>
-<span class="nf">lift&#39;</span> <span class="ow">::</span> <span class="kt">Num</span> <span class="n">a</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; :t lift'
+lift' :: Num a =&gt; [a] -&gt; [Maybe a]</code></pre></div>
 
 <p>Here:<br />
 (a  -&gt;  b) <br />
@@ -78,8 +78,8 @@ is equivalent to<br />
 
 <p>The type of findNElem:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">findNElem</span> <span class="mi">3</span>
-<span class="nf">findNElem</span> <span class="mi">3</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Eq</span> <span class="n">a</span><span class="p">,</span> <span class="kt">Num</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="p">[</span><span class="kt">Maybe</span> <span class="n">a</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; :t findNElem 3
+findNElem 3 :: (Eq a, Num a) =&gt; [Maybe a] -&gt; Bool</code></pre></div>
 
 <p>Here:<br />
 (b -&gt; c)<br />
@@ -96,47 +96,47 @@ which in our case is<br />
 
 <p>Here’s the type of (.):</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span> <span class="p">(</span><span class="o">.</span><span class="p">)</span>
-<span class="p">(</span><span class="o">.</span><span class="p">)</span> <span class="ow">::</span> <span class="p">(</span><span class="n">b</span> <span class="ow">-&gt;</span> <span class="n">c</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="n">a</span> <span class="ow">-&gt;</span> <span class="n">c</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; : (.)
+(.) :: (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c</code></pre></div>
 
 <p>which is same as what was defined aboove.</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="kr">let</span> <span class="n">fcompl</span> <span class="ow">=</span> <span class="n">findNElem</span> <span class="mi">3</span> <span class="o">.</span> <span class="n">lift&#39;</span>
-<span class="nf">λ</span><span class="o">&gt;</span> <span class="kt">:</span><span class="n">t</span> <span class="n">fcompl</span>
-<span class="nf">fcompl</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Integer</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Bool</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; let fcompl = findNElem 3 . lift'
+λ&gt; :t fcompl
+fcompl :: [Integer] -&gt; Bool</code></pre></div>
 
 <p>Finally, we run it check if the element exists:</p>
 
-<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">λ</span><span class="o">&gt;</span> <span class="n">fcompl</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
-<span class="kt">True</span></code></pre></div>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell">λ&gt; fcompl [1,2,3]
+True</code></pre></div>
 
 <p>Here’s the same example but in Scala:</p>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">lift</span><span class="o">(</span><span class="n">ls</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span> <span class="k">=</span> <span class="n">ls</span> <span class="n">map</span> <span class="o">{</span> <span class="n">x</span> <span class="k">=&gt;</span> <span class="nc">Option</span><span class="o">(</span><span class="n">x</span><span class="o">)}</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">def lift(ls: List[Int]) = ls map { x =&gt; Option(x)}</code></pre></div>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">scala</span><span class="o">&gt;</span> <span class="k">:type</span> <span class="kt">lift</span> <span class="k">_</span>
-<span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">List</span><span class="o">[</span><span class="kt">Option</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">scala&gt; :type lift _
+List[Int] =&gt; List[Option[Int]]</code></pre></div>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">def</span> <span class="n">findNElem</span><span class="o">(</span><span class="n">elem</span><span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">ls</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Option</span><span class="o">[</span><span class="kt">Int</span><span class="o">]])</span><span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="n">ls</span> <span class="k">match</span> <span class="o">{</span>
-    <span class="k">case</span> <span class="nc">Nil</span> <span class="k">=&gt;</span> <span class="kc">false</span>
-	<span class="k">case</span> <span class="n">x</span> <span class="o">::</span> <span class="n">xs</span> <span class="k">=&gt;</span> <span class="k">if</span> <span class="o">(</span><span class="n">elem</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="o">)</span> <span class="kc">true</span> <span class="k">else</span> <span class="n">findNElem</span> <span class="o">(</span><span class="n">elem</span><span class="o">,</span> <span class="n">xs</span><span class="o">)</span>
-<span class="o">}</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">def findNElem(elem: Int, ls: List[Option[Int]]): Boolean = ls match {
+    case Nil =&gt; false
+	case x :: xs =&gt; if (elem == x.get) true else findNElem (elem, xs)
+}</code></pre></div>
 
-<p>The point worth mentioning here is that we curry the function in Scala because Scala doesn’t provide currying by default. </p>
+<p>The point worth mentioning here is that we curry the function in Scala because Scala doesn’t provide currying by default.</p>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">findElemCurried</span> <span class="k">=</span> <span class="o">(</span><span class="n">funcompose</span><span class="o">.</span><span class="n">findNElem</span> <span class="k">_</span><span class="o">).</span><span class="n">curried</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">val findElemCurried = (funcompose.findNElem _).curried</code></pre></div>
 
 <p>If we look at the type we see it returns a Function1 which takes a function which takes a Int parameter and a function.</p>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">scala</span><span class="o">&gt;</span> <span class="k">val</span> <span class="n">findElemCurried</span> <span class="k">=</span> <span class="o">(</span><span class="n">funcompose</span><span class="o">.</span><span class="n">findNElem</span> <span class="k">_</span><span class="o">).</span><span class="n">curried</span>
-<span class="n">findElemCurried</span><span class="k">:</span> <span class="kt">Int</span> <span class="o">=&gt;</span> <span class="o">(</span><span class="nc">List</span><span class="o">[</span><span class="kt">Option</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span> <span class="k">=&gt;</span> <span class="nc">Boolean</span><span class="o">)</span> <span class="k">=</span> <span class="o">&lt;</span><span class="n">function1</span><span class="o">&gt;</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">scala&gt; val findElemCurried = (funcompose.findNElem _).curried
+findElemCurried: Int =&gt; (List[Option[Int]] =&gt; Boolean) = &lt;function1&gt;</code></pre></div>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="k">val</span> <span class="n">fcompl</span> <span class="k">=</span> <span class="n">findElemCurried</span><span class="o">(</span><span class="mi">3</span><span class="o">)</span> <span class="n">compose</span> <span class="n">funcompose</span><span class="o">.</span><span class="n">lift</span> <span class="k">_</span>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">val fcompl = findElemCurried(3) compose funcompose.lift _
 
-<span class="n">scala</span><span class="o">&gt;</span> <span class="k">:type</span> <span class="kt">findElemCurried</span><span class="o">(</span><span class="err">3</span><span class="o">)</span>
-<span class="kt">List</span><span class="o">[</span><span class="kt">Option</span><span class="o">[</span><span class="kt">Int</span><span class="o">]]</span> <span class="k">=&gt;</span> <span class="nc">Boolean</span></code></pre></div>
+scala&gt; :type findElemCurried(3)
+List[Option[Int]] =&gt; Boolean</code></pre></div>
 
-<div class="highlight"><pre><code class="language-scala" data-lang="scala"><span class="n">fcompl</span><span class="o">(</span><span class="nc">List</span><span class="o">[</span><span class="err">1</span>,<span class="err">2</span>,<span class="err">3</span><span class="o">])</span></code></pre></div>
+<div class="highlight"><pre><code class="language-scala" data-lang="scala">fcompl(List[1,2,3])</code></pre></div>
 
 <h4>Conclusion</h4>
 
