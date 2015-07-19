@@ -5,7 +5,7 @@ date:   2015-07-18 11:00:00
 categories: akka, distributed systems
 ---
 
-For anyone who is serious about distributed systems or building one, there are always issues that are commonly encountered.Issues such as replication, consistency, availability and partition tolerance (CAP)[1]. In a real life scenarion, partition tolerance is inevitable. So the system must be able to handle partition tolerance when there are network outages. Therefore, P in the CAP is a must for any distributed system. This has been backed by Peter Deutsch in his  (<a href="https://blogs.oracle.com/jag/resource/Fallacies.html">Eight Fallacies of Distributed Computing</a>).
+For anyone who is serious about distributed systems or building one, there are always issues that are commonly encountered.Issues such as replication, consistency, availability and partition tolerance (CAP)[1]. In a real life scenario, partition tolerance is inevitable. So the system must be able to handle partition tolerance when there are network outages. Therefore, P in the CAP is a must for any distributed system. This has been backed by Peter Deutsch in his  (<a href="https://blogs.oracle.com/jag/resource/Fallacies.html">Eight Fallacies of Distributed Computing</a>).
 
 Now, we are left with just C and A and need to pick one of those. Some applications need strong consistency over availability. Since we are talking about Akka cluster and it is inspired from Dyanamo, it relaxes consistency and tries to be more available in case of network partitions. Akka cluster is a peer-to-peer system and uses gossip protocol for membership changes. Failure detection in the cluster is handled using 'Phi Accrual Failure Detector'. 
 
