@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Elastically adding and removing nodes in Akka cluster"
+title:  "Elastically adding and removing nodes using Akka cluster"
 date:   2015-08-03 11:00:00
 categories: akka, distributed systems
 ---
