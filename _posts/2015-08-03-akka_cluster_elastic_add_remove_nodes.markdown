@@ -36,7 +36,9 @@ Similar to adding node(s), removing node(s) is also dynamic. When a node is remo
 
 <h4>Elasticsearch indexing</h4>
 
-Once the workers start indexing, the Elasticsearch indexing status can be viewed through marvel plugin. Marvel is an excellent plugin to view the status of the Elasticsearch's cluster health and the number of documents indexed in near-real time.
+Once the workers start indexing, the Elasticsearch indexing status can be viewed through marvel plugin. Marvel is an excellent plugin to view the status of the Elasticsearch's cluster health and the number of documents indexed in near-real time. Once indexed it looks like as shown below:
+
+![](/assets/marvel.png)
 
 <h4>Conclusion</h4>
 
